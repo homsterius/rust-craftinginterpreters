@@ -1,3 +1,4 @@
+use std::rc::*;
 use lox::token::Token;
 use lox::token::TokenType;
 use lox::token::TokenLiteral;
@@ -29,7 +30,7 @@ lazy_static! {
 
 pub struct Scanner<'a> {
     source: &'a str,
-    tokens: Vec<Token<'a>>,
+    tokens: Vec<Rc<Token<'a>>>,
     start: usize,
     current: usize,
     line: usize,
@@ -46,12 +47,13 @@ impl<'a> Scanner<'a> {
         }
     }
 
-    pub fn scan_tokens<F: FnMut((usize, &str))>(&mut self, mut err: F) -> &Vec<Token<'a>> {
+    pub fn scan_tokens<F>(&mut self, mut err: F) -> &Vec<Rc<Token<'a>>>
+    where F: FnMut(usize, &str) {
         while !self.is_at_end() {
             // We are at the beginning of the next lexeme.
             self.start = self.current;
             if let Err(e) = self.scan_token() {
-                err(e);
+                err(e.0, e.1);
             }
         }
 

@@ -1,9 +1,10 @@
+use std::rc::*;
 use std::fmt::{
     Display,
     Formatter,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TokenType {                                   
     // Single-character tokens.                      
     LeftParen, RightParen, LeftBrace, RightBrace,
@@ -25,10 +26,11 @@ pub enum TokenType {
     Eof
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum TokenLiteral<'a> {
     Number(f64),
     Str(&'a str),
+    Bool(bool),
     None,
 }
 
@@ -40,13 +42,13 @@ pub struct Token<'a> {
 }
 
 impl<'a> Token<'a> {
-    pub fn new(token_type: TokenType, lexeme: &'a str, literal: TokenLiteral<'a>, line: usize) -> Token<'a> {
-        Token {
+    pub fn new(token_type: TokenType, lexeme: &'a str, literal: TokenLiteral<'a>, line: usize) -> Rc<Token<'a>> {
+        Rc::new(Token {
             token_type,
             lexeme,
             literal,
             line,
-        }
+        })
     }
 }
 

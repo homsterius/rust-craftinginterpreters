@@ -1,20 +1,25 @@
-pub mod token;
-pub mod scanner;
-pub mod expr;
-pub mod ast_printer;
-
-use self::scanner::Scanner;
-
 use std::fs;
 use std::io;
 use std::io::*;
 use std::process;
+use std::rc::*;
+
+pub mod token;
+pub mod scanner;
+pub mod expr;
+pub mod ast_printer;
+pub mod parser;
+
+use self::scanner::*;
+use self::token::*;
+use self::parser::*;
+use self::ast_printer::AstPrinter;
 
 pub struct Lox{
     had_error: bool,
 }
 
-impl<'a> Lox {
+impl Lox {
     pub fn new() -> Lox {
         Lox {
             had_error: false,
@@ -43,17 +48,37 @@ impl<'a> Lox {
         }
     }
 
-    fn run(&mut self, source: &'a str) {
+    fn run<'a>(&mut self, source: &'a str) {
         let mut scanner = Scanner::new(source);
 
-        let tokens = scanner.scan_tokens(|err| self.error(err.0, err.1));
-        for token in tokens.iter() {
-            println!("{}", token);
+        let tokens = scanner.scan_tokens(|line, err| self.error(line, err));
+        let mut parser = Parser::new(tokens);
+        let expression = parser.parse(|tok, err| self.error_token(tok, err));
+
+        // Stop if there was a syntax error.
+        if self.had_error {
+            return;
+        }
+
+        match expression {
+            Some(expr) => {
+                let ast_printer = AstPrinter {};
+                println!("{}", ast_printer.print(expr.as_ref()));
+            },
+            _ => {},
         }
     }
 
     fn error(&mut self, line: usize, message: &str) {
         self.report(line, "", message);
+    }
+
+    fn error_token<'a>(&mut self, token: Rc<Token<'a>>, message: &str) {
+        if token.token_type == TokenType::Eof {
+            self.report(token.line, " at end", message);
+        } else {
+            self.report(token.line, &format!(" at '{}'", token.lexeme), message);
+        }
     }
 
     fn report(&mut self, line: usize, whr: &str, message: &str) {
