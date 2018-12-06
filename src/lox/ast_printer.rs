@@ -20,7 +20,7 @@ impl<'a> AstPrinter {
     }
 }
 
-impl<'a> ExprVisitor<'a> for AstPrinter {
+impl<'a> Visitor<'a, String> for AstPrinter {
     fn visit_binary(&self, expr: &Binary<'a>) -> String {
         self.parenthesize(expr.operator.lexeme, &[expr.left.as_ref(), expr.right.as_ref()])
     }

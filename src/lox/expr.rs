@@ -4,15 +4,15 @@ use lox::token::TokenLiteral;
 
 pub type ExprRef<'a> = Rc<Expr<'a> + 'a>;
 
-pub trait ExprVisitor<'a> {
-    fn visit_binary(&self, expr: &Binary<'a>) -> String;
-    fn visit_grouping(&self, expr: &Grouping<'a>) -> String;
-    fn visit_literal(&self, expr: &Literal<'a>) -> String;
-    fn visit_unary(&self, expr: &Unary<'a>) -> String;
+pub trait Visitor<'a, T> {
+    fn visit_binary(&self, expr: &Binary<'a>) -> T;
+    fn visit_grouping(&self, expr: &Grouping<'a>) -> T;
+    fn visit_literal(&self, expr: &Literal<'a>) -> T;
+    fn visit_unary(&self, expr: &Unary<'a>) -> T;
 }
 
 pub trait Expr<'a> {
-    fn accept(&self, visitor: &ExprVisitor<'a>) -> String;
+    fn accept(&self, visitor: &Visitor<'a, String>) -> String;
 }
 
 
@@ -33,7 +33,7 @@ impl<'a> Binary<'a> {
 }
 
 impl<'a> Expr<'a> for Binary<'a> {
-    fn accept(&self, visitor: &ExprVisitor<'a>) -> String {
+    fn accept(&self, visitor: &Visitor<'a, String>) -> String {
         (*visitor).visit_binary(self)
     }
 }
@@ -50,7 +50,7 @@ impl<'a> Grouping<'a> {
 }
 
 impl<'a> Expr<'a> for Grouping<'a> {
-    fn accept(&self, visitor: &ExprVisitor<'a>) -> String {
+    fn accept(&self, visitor: &Visitor<'a, String>) -> String {
         (*visitor).visit_grouping(self)
     }
 }
@@ -67,7 +67,7 @@ impl<'a> Literal<'a> {
 }
 
 impl<'a> Expr<'a> for Literal<'a> {
-    fn accept(&self, visitor: &ExprVisitor<'a>) -> String {
+    fn accept(&self, visitor: &Visitor<'a, String>) -> String {
         (*visitor).visit_literal(self)
     }
 }
@@ -88,7 +88,7 @@ impl<'a> Unary<'a> {
 }
 
 impl<'a> Expr<'a> for Unary<'a> {
-    fn accept(&self, visitor: &ExprVisitor<'a>) -> String {
+    fn accept(&self, visitor: &Visitor<'a, String>) -> String {
         (*visitor).visit_unary(self)
     }
 }
