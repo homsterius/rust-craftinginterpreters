@@ -86,7 +86,7 @@ impl<'a> Scanner<'a> {
                 self.add_token(m, TokenLiteral::None);
             },
             '>' => {
-                let m = if self.mtch("=") {TokenType::GreaterEqual} else {TokenType::Greather};
+                let m = if self.mtch("=") {TokenType::GreaterEqual} else {TokenType::Greater};
                 self.add_token(m, TokenLiteral::None)
             },
             '/' => {
@@ -121,7 +121,7 @@ impl<'a> Scanner<'a> {
         self.current >= self.source.len()
     }
 
-    fn add_token(&mut self, token_type: TokenType, literal: TokenLiteral<'a>) {
+    fn add_token(&mut self, token_type: TokenType, literal: TokenLiteral) {
         let lexeme = &self.source[self.start..self.current];
         self.tokens.push(Token::new(token_type, lexeme, literal, self.line));
     }
@@ -176,7 +176,7 @@ impl<'a> Scanner<'a> {
         self.advance();
 
         let s = &self.source[self.start + 1..self.current - 1];
-        self.add_token(TokenType::Str, TokenLiteral::Str(s));
+        self.add_token(TokenType::Str, TokenLiteral::Str(String::from(s)));
 
         Ok(())
     }
@@ -225,7 +225,7 @@ impl<'a> Scanner<'a> {
         let txt = &self.source[self.start..self.current];
         match Keywords.get(txt) {
             Some(token) => {
-                self.add_token(token.clone(), TokenLiteral::Str(txt));
+                self.add_token(token.clone(), TokenLiteral::Str(String::from(txt)));
             },
             None => {
                 self.add_token(TokenType::Identifier, TokenLiteral::None);

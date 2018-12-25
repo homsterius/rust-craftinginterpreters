@@ -13,7 +13,7 @@ pub enum TokenType {
     // One or two character tokens.
     Bang, BangEqual,
     Equal, EqualEqual,
-    Greather, GreaterEqual,
+    Greater, GreaterEqual,
     Less, LessEqual,
 
     // Literals.
@@ -27,9 +27,9 @@ pub enum TokenType {
 }
 
 #[derive(Debug, Clone)]
-pub enum TokenLiteral<'a> {
+pub enum TokenLiteral {
     Number(f64),
-    Str(&'a str),
+    Str(String),
     Bool(bool),
     None,
 }
@@ -37,12 +37,12 @@ pub enum TokenLiteral<'a> {
 pub struct Token<'a> {
     pub token_type: TokenType,
     pub lexeme: &'a str,
-    pub literal: TokenLiteral<'a>,
+    pub literal: TokenLiteral,
     pub line: usize,
 }
 
 impl<'a> Token<'a> {
-    pub fn new(token_type: TokenType, lexeme: &'a str, literal: TokenLiteral<'a>, line: usize) -> Rc<Token<'a>> {
+    pub fn new(token_type: TokenType, lexeme: &'a str, literal: TokenLiteral, line: usize) -> Rc<Token<'a>> {
         Rc::new(Token {
             token_type,
             lexeme,

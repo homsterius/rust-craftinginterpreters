@@ -15,10 +15,10 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse<F>(&mut self, mut err: F) -> Option<ExprRef<'a>>
+    pub fn parse<T: 'a, F>(&mut self, mut err: F) -> Option<ExprRef<'a, T>>
     where F: FnMut(Rc<Token<'a>>, &'static str) {
         match self.expression() {
-            Ok(token) => Option::Some(token),
+            Ok(expr) => Option::Some(expr),
             Err(e) => {
                 err(e.0, e.1);
                 Option::None
@@ -26,11 +26,11 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn expression(&mut self) -> Result<ExprRef<'a>, (Rc<Token<'a>>, &'static str)> {
+    fn expression<T: 'a>(&mut self) -> Result<ExprRef<'a, T>, (Rc<Token<'a>>, &'static str)> {
         self.equalty()
     }
 
-    fn equalty(&mut self) -> Result<ExprRef<'a>, (Rc<Token<'a>>, &'static str)> {
+    fn equalty<T: 'a>(&mut self) -> Result<ExprRef<'a, T>, (Rc<Token<'a>>, &'static str)> {
         let mut expr = self.comparison()?;
 
         while self.mtch(&[TokenType::BangEqual, TokenType::EqualEqual]) {
@@ -42,19 +42,19 @@ impl<'a> Parser<'a> {
         Result::Ok(expr)
     }
 
-    fn comparison(&mut self) -> Result<ExprRef<'a>, (Rc<Token<'a>>, &'static str)> {
-        let mut expr: Rc<Expr<'a>> = self.addition()?;
+    fn comparison<T: 'a>(&mut self) -> Result<ExprRef<'a, T>, (Rc<Token<'a>>, &'static str)> {
+        let mut expr: Rc<Expr<'a, T>> = self.addition()?;
 
-        while self.mtch(&[TokenType::Greather, TokenType::GreaterEqual, TokenType::Less, TokenType::LessEqual]) {
+        while self.mtch(&[TokenType::Greater, TokenType::GreaterEqual, TokenType::Less, TokenType::LessEqual]) {
             let operator: Rc<Token<'a>> = self.previous();
-            let right: Rc<Expr<'a>> = self.addition()?;
+            let right: Rc<Expr<'a, T>> = self.addition()?;
             expr = Binary::new(expr, operator, right);
         }
 
         Result::Ok(expr)
     }
 
-    fn addition(&mut self) -> Result<ExprRef<'a>, (Rc<Token<'a>>, &'static str)> {
+    fn addition<T: 'a>(&mut self) -> Result<ExprRef<'a, T>, (Rc<Token<'a>>, &'static str)> {
         let mut expr = self.multiplication()?;
 
         while self.mtch(&[TokenType::Minus, TokenType::Plus]) {
@@ -66,7 +66,7 @@ impl<'a> Parser<'a> {
         Result::Ok(expr)
     }
 
-    fn multiplication(&mut self) -> Result<ExprRef<'a>, (Rc<Token<'a>>, &'static str)> {
+    fn multiplication<T: 'a>(&mut self) -> Result<ExprRef<'a, T>, (Rc<Token<'a>>, &'static str)> {
         let mut expr = self.unary()?;
 
         while self.mtch(&[TokenType::Slash, TokenType::Star]) {
@@ -78,7 +78,7 @@ impl<'a> Parser<'a> {
         Result::Ok(expr)
     }
 
-    fn unary(&mut self) -> Result<ExprRef<'a>, (Rc<Token<'a>>, &'static str)> {
+    fn unary<T: 'a>(&mut self) -> Result<ExprRef<'a, T>, (Rc<Token<'a>>, &'static str)> {
         if self.mtch(&[TokenType::Bang, TokenType::Minus]) {
             let operator = self.previous();
             let right = self.unary()?;
@@ -88,7 +88,7 @@ impl<'a> Parser<'a> {
         self.primary()
     }
 
-    fn primary(&mut self) -> Result<ExprRef<'a>, (Rc<Token<'a>>, &'static str)> {
+    fn primary<T: 'a>(&mut self) -> Result<ExprRef<'a, T>, (Rc<Token<'a>>, &'static str)> {
         if self.mtch(&[TokenType::False]) {
             return Result::Ok(Literal::new(TokenLiteral::Bool(false)));
         }
@@ -104,7 +104,7 @@ impl<'a> Parser<'a> {
         }
 
         if self.mtch(&[TokenType::LeftParen]) {
-            let expr: Rc<Expr<'a>> = self.expression()?;
+            let expr: Rc<Expr<'a, T>> = self.expression()?;
             self.consume(TokenType::RightParen, "Expect ')' after expression.")?;
             return Result::Ok(Grouping::new(expr));
         }

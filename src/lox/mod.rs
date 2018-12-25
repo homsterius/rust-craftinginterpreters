@@ -9,20 +9,24 @@ pub mod scanner;
 pub mod expr;
 pub mod ast_printer;
 pub mod parser;
+pub mod interpreter;
 
 use self::scanner::*;
 use self::token::*;
 use self::parser::*;
-use self::ast_printer::AstPrinter;
+use self::interpreter::*;
+// use self::ast_printer::AstPrinter;
 
 pub struct Lox{
     had_error: bool,
+    had_runtime_error: bool,
 }
 
 impl Lox {
     pub fn new() -> Lox {
         Lox {
             had_error: false,
+            had_runtime_error: false,
         }
     }
 
@@ -46,6 +50,10 @@ impl Lox {
         if self.had_error {
             process::exit(65);
         }
+
+        if self.had_runtime_error {
+            process::exit(70);
+        }
     }
 
     fn run<'a>(&mut self, source: &'a str) {
@@ -62,8 +70,10 @@ impl Lox {
 
         match expression {
             Some(expr) => {
-                let ast_printer = AstPrinter {};
-                println!("{}", ast_printer.print(expr.as_ref()));
+                // let ast_printer = AstPrinter {};
+                // println!("{}", ast_printer.print(expr.as_ref()));
+                let interpreter = Interpreter {};
+                interpreter.interpret(expr, |tok, err| self.runtime_error(tok, err));
             },
             _ => {},
         }
@@ -79,6 +89,11 @@ impl Lox {
         } else {
             self.report(token.line, &format!(" at '{}'", token.lexeme), message);
         }
+    }
+
+    fn runtime_error<'a>(&mut self, token: Rc<Token<'a>>, message: &str) {
+        println!("{}\n[line {}]", message, token.line);
+        self.had_runtime_error = true;
     }
 
     fn report(&mut self, line: usize, whr: &str, message: &str) {
